@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estadística Territorial — Plan A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E1620; --panel:#16202B; --panel-2:#1C2833; --line:rgba(237,239,242,0.08);
+    --paper:#EDEFF2; --muted:#8C99A8;
+    --gold:#E3A72E; --gold-dim:rgba(227,167,46,0.16);
+    --teal:#4FA98A; --teal-dim:rgba(79,169,138,0.16);
+    --rust:#C4633A; --blue:#5B8DBD;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--ink);color:var(--paper);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:60px;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
+
+  header.masthead{border-bottom:1px solid var(--line);background:linear-gradient(180deg, rgba(227,167,46,0.05), transparent 60%), var(--ink);padding:28px 0 22px;}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 3px var(--teal-dim);}
+  h1.title{font-family:'Oswald',sans-serif;font-weight:700;font-size:clamp(28px,5.5vw,46px);letter-spacing:0.01em;text-transform:uppercase;margin:0 0 6px;line-height:1.05;}
+  h1.title span{color:var(--gold);}
+  .subtitle{color:var(--muted);font-size:14.5px;max-width:640px;line-height:1.5;}
+  .updated-row{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);}
+  .updated-row .pill{border:1px solid var(--line);border-radius:100px;padding:5px 12px;background:var(--panel);}
+  .updated-row .pill.live{color:var(--teal);border-color:rgba(79,169,138,0.35);}
+  .updated-row .pill.local{color:var(--gold);border-color:rgba(227,167,46,0.35);}
+  .updated-row .pill.warn{color:var(--rust);border-color:rgba(196,99,58,0.5);}
+  #refreshBtn{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:transparent;color:var(--paper);border:1px solid var(--line);border-radius:100px;padding:5px 14px;cursor:pointer;}
+  #refreshBtn:hover{border-color:var(--gold);color:var(--gold);}
+
+  .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:26px;border-radius:10px;overflow:hidden;}
+  .kpi{background:var(--panel);padding:18px 16px;}
+  .kpi .num{font-family:'Oswald',sans-serif;font-size:clamp(22px,3vw,32px);font-weight:600;color:var(--paper);line-height:1;}
+  .kpi .label{margin-top:6px;font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);}
+  .kpi .bar{margin-top:10px;height:4px;border-radius:2px;background:rgba(237,239,242,0.08);overflow:hidden;}
+  .kpi .bar i{display:block;height:100%;background:var(--gold);border-radius:2px;}
+  @media (max-width:860px){.kpi-strip{grid-template-columns:repeat(2,1fr);}.kpi:nth-child(5){grid-column:span 2;}}
+
+  .chip-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .bday-section{margin-top:22px;}
+  .bday-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+  .bday-card{background:linear-gradient(135deg, rgba(227,167,46,0.14), var(--panel));border:1px solid rgba(227,167,46,0.35);border-radius:10px;padding:14px 16px;}
+  .bday-card .name{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;color:var(--paper);}
+  .bday-card .role{font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+  .bday-card .details{font-size:12px;color:var(--muted);margin-top:6px;font-family:'JetBrains Mono',monospace;}
+  .bday-card .msg{font-size:12.5px;color:var(--paper);margin-top:8px;line-height:1.4;}
+  .bday-empty{font-size:12.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+  .chip{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:100px;padding:5px 12px;background:var(--panel);}
+  .chip b{color:var(--paper);}
+
+  section{margin-top:40px;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:10px;}
+  .sec-head .idx{font-family:'JetBrains Mono',monospace;color:var(--gold);font-size:12px;}
+  .sec-head h2{font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:18px;letter-spacing:0.03em;margin:0;font-weight:600;}
+  .sec-head .hint{margin-left:auto;color:var(--muted);font-size:12px;}
+
+  .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:860px){.chart-grid{grid-template-columns:1fr;}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 18px 14px;min-height:270px;}
+  .card h3{margin:0 0 12px;font-family:'Oswald',sans-serif;font-size:14px;text-transform:uppercase;letter-spacing:0.03em;font-weight:600;color:var(--paper);}
+  .card canvas{max-height:240px;}
+  .card .chart-error{color:var(--muted);font-size:12.5px;font-family:'JetBrains Mono',monospace;padding:20px 0;}
+
+  .mosaic-legend{display:flex;gap:18px;margin-bottom:14px;font-size:12px;color:var(--muted);flex-wrap:wrap;}
+  .mosaic-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:11px;height:11px;border-radius:2px;display:inline-block;}
+  .zona-block{margin-bottom:20px;}
+  .zona-title{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+  .zona-title b{color:var(--paper);font-size:13px;}
+  .mosaic{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:5px;}
+  .tile{position:relative;aspect-ratio:1.6/1;border-radius:6px;padding:7px 8px;font-size:10px;line-height:1.25;overflow:hidden;background:var(--panel-2);border:1px solid var(--line);}
+  .tile.visitado{background:var(--gold-dim);border-color:rgba(227,167,46,0.4);}
+  .tile.pendiente{background:transparent;}
+  .tile .name{color:var(--paper);font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tile .stat{display:block;margin-top:3px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:9.5px;}
+
+  details.setup{margin-top:50px;border:1px dashed var(--line);border-radius:10px;background:var(--panel);}
+  details.setup summary{cursor:pointer;padding:16px 18px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--gold);list-style:none;display:flex;align-items:center;gap:8px;}
+  details.setup summary::-webkit-details-marker{display:none;}
+  details.setup summary:before{content:"▸";transition:transform .15s;}
+  details.setup[open] summary:before{transform:rotate(90deg);}
+  .setup-body{padding:0 18px 20px;color:var(--muted);font-size:13px;line-height:1.7;}
+  .setup-body ol{padding-left:20px;}
+  .setup-body code{background:var(--panel-2);color:var(--paper);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px;}
+  .setup-body textarea{width:100%;min-height:44px;margin-top:8px;background:var(--ink);color:var(--paper);border:1px solid var(--line);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:10px;resize:vertical;}
+  .setup-body button{margin-top:10px;background:var(--gold);color:#1a1305;border:none;font-family:'Inter',sans-serif;font-weight:700;font-size:12.5px;padding:9px 16px;border-radius:7px;cursor:pointer;}
+  .setup-body b.field{color:var(--paper);display:block;margin-top:14px;}
+
+  footer{text-align:center;color:var(--muted);font-size:11px;margin-top:50px;font-family:'JetBrains Mono',monospace;}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span>GALAPA, ATLÁNTICO · CAMPAÑA TERRITORIAL</div>
+    <h1 class="title">Estadística Territorial <span>Plan A</span></h1>
+    <div class="subtitle">Todo calculado en vivo directo de tus hojas barrios, visitas, lideres y votantes.</div>
+    <div class="updated-row">
+      <span class="pill" id="modePill">cargando…</span>
+      <span class="pill" id="updatedPill">—</span>
+      <button id="refreshBtn">↻ actualizar ahora</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="kpi-strip" id="kpiStrip"></div>
+  <div class="chip-row" id="chipRow"></div>
+
+  <div class="bday-section">
+    <div class="sec-head" style="margin-bottom:10px;"><span class="idx">🎂</span><h2>Cumpleaños de hoy</h2></div>
+    <div id="bdayHost"></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="idx">01</span><h2>Gráficas</h2></div>
+    <div class="chart-grid">
+      <div class="card"><h3>Cobertura de barrios</h3><canvas id="chartCobertura"></canvas></div>
+      <div class="card"><h3>Estructura del equipo por zona</h3><canvas id="chartZona"></canvas></div>
+      <div class="card"><h3>Crecimiento acumulado de líderes</h3><canvas id="chartCrecimiento"></canvas></div>
+      <div class="card"><h3>Votantes vs. meta</h3><canvas id="chartMeta"></canvas></div>
+      <div class="card"><h3>Nivel de compromiso de votantes</h3><canvas id="chartCompromiso"></canvas></div>
+      <div class="card"><h3>Votantes por canal de contacto</h3><canvas id="chartCanal"></canvas></div>
+      <div class="card" style="grid-column:1 / -1;"><h3>Top necesidades priorizadas</h3><canvas id="chartNecesidades"></canvas></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">02</span><h2>Perfil demográfico</h2><span class="hint">líderes y votantes</span></div>
+    <div class="chart-grid">
+      <div class="card"><h3>Líderes por género</h3><canvas id="chartLideresGenero"></canvas></div>
+      <div class="card"><h3>Líderes por edad</h3><canvas id="chartLideresEdad"></canvas></div>
+      <div class="card"><h3>Líderes por nivel educativo</h3><canvas id="chartLideresNivel"></canvas></div>
+      <div class="card"><h3>Votantes por género</h3><canvas id="chartVotantesGenero"></canvas></div>
+      <div class="card"><h3>Votantes por edad</h3><canvas id="chartVotantesEdad"></canvas></div>
+      <div class="card"><h3>Votantes por nivel educativo</h3><canvas id="chartVotantesNivel"></canvas></div>
+      <div class="card" style="grid-column:1 / -1;"><h3>Votantes por categoría (sublíder / voluntario)</h3><canvas id="chartVotantesCategoria"></canvas></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">03</span><h2>Mapa real de Galapa — cobertura por barrio</h2><span class="hint" id="realMapHint"></span></div>
+    <div class="mosaic-legend">
+      <span><i class="swatch" style="background:var(--gold);border:1px solid rgba(227,167,46,.6)"></i>Visitado</span>
+      <span><i class="swatch" style="background:#2A3846;border:1px solid var(--line)"></i>Pendiente</span>
+      <span><i class="swatch" style="background:#0E1620;border:1px solid var(--line)"></i>Fuera del plano oficial</span>
+    </div>
+    <div class="card" style="padding:14px;">
+      <div id="realMapHost" style="width:100%;overflow:auto;"></div>
+    </div>
+    <div style="font-size:11.5px;color:var(--muted);margin-top:8px;">
+      Basado en el plano oficial de división de barrios de Planeación Municipal (2013) — cubre los 29 barrios del casco urbano histórico. Las veredas, asentamientos y desarrollos más nuevos no incluidos en ese plano se muestran abajo, en la cuadrícula.
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">04</span><h2>Mapa de calor — todos los barrios (cuadrícula)</h2><span class="hint" id="coberturaHint"></span></div>
+    <div class="mosaic-legend">
+      <span><i class="swatch" style="background:var(--gold-dim);border:1px solid rgba(227,167,46,.4)"></i>Visitado</span>
+      <span><i class="swatch" style="background:transparent;border:1px solid var(--line)"></i>Pendiente</span>
+    </div>
+    <div id="mosaicHost"></div>
+  </section>
+
+
+  <footer>Galapa, Atlántico — panel calculado en vivo desde tus hojas de campaña</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script>
+/* ============================================================
+   Los botones se activan primero, ANTES de tocar Chart/Papa,
+   para que "Guardar" y "Actualizar" funcionen incluso si las
+   librerías no llegaron a cargar.
+   ============================================================ */
+const LS_KEY = "galapa_csv_urls_v4";
+/* Links publicados de Google Sheets — ya integrados, así el modo en
+   vivo funciona para cualquiera que abra este archivo. Si guardas
+   nuevos links desde el panel de abajo, esos tienen prioridad. */
+const DEFAULT_CONFIG = {
+  barrios: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTC3er3cfbOEgI_hIyQnBa-sT8yKMdNDFAuvUP8725I9mEzG-yyTnDZ50RNJF7bg/pub?gid=924400921&single=true&output=csv",
+  visitas: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTC3er3cfbOEgI_hIyQnBa-sT8yKMdNDFAuvUP8725I9mEzG-yyTnDZ50RNJF7bg/pub?gid=1799877650&single=true&output=csv",
+  lideres: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTC3er3cfbOEgI_hIyQnBa-sT8yKMdNDFAuvUP8725I9mEzG-yyTnDZ50RNJF7bg/pub?gid=964753304&single=true&output=csv",
+  votantes: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTC3er3cfbOEgI_hIyQnBa-sT8yKMdNDFAuvUP8725I9mEzG-yyTnDZ50RNJF7bg/pub?gid=619327190&single=true&output=csv"
+};
+function getSaved(){
+  try{
+    const stored = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    return {
+      barrios: stored.barrios || DEFAULT_CONFIG.barrios,
+      visitas: stored.visitas || DEFAULT_CONFIG.visitas,
+      lideres: stored.lideres || DEFAULT_CONFIG.lideres,
+      votantes: stored.votantes || DEFAULT_CONFIG.votantes
+    };
+  }catch(e){ return DEFAULT_CONFIG; }
+}
+const saved = getSaved();
+
+document.getElementById("refreshBtn").addEventListener("click", ()=>refreshAll());
+
+/* ============================================================
+   DATOS DE RESPALDO — se usan si el modo en vivo falla o no
+   está configurado.
+   ============================================================ */
+const FALLBACK_BARRIOS = [
+  {"barrio":"12 de septiembre","lider":"Sin líder asignado","zona":"urbano","votantes":"50","meta votantes":"100","ultima visita":""},
+  {"barrio":"Barrio abajo","lider":"raul rolong","zona":"urbano","votantes":"","meta votantes":"","ultima visita":"24/08/2026"}
+];
+const FALLBACK_VISITAS = [
+  {"fecha":"03-07-2026","barrio":"Barrio abajo","zona":"urbano","necesidad prioritaria":"educacion","personas atentidas":"50","actividad":"sancocho"}
+];
+const REAL_MAP_DATA = {"w":845,"h":1036,"barrios":[{"name":"Barrio Abajo","polys":[[[418.0,505.6],[400.8,560.8],[434.3,573.1],[427.2,602.8],[450.6,608.7],[457.6,588.5],[460.7,588.5],[455.0,610.1],[477.0,615.8],[479.6,597.3],[478.1,590.5],[483.8,566.1],[473.4,560.6],[469.3,561.9],[468.2,558.1],[462.4,556.2],[458.3,557.9],[457.6,554.6],[431.4,546.3],[443.1,512.2],[426.4,507.3],[421.7,509.3],[421.5,506.4]]]},{"name":"Barrio Arriba","polys":[[[346.7,726.0],[335.1,760.1],[334.6,765.8],[319.4,806.3],[336.8,811.6],[341.0,798.4],[344.3,798.2],[341.2,813.6],[359.9,818.8],[371.4,779.2],[379.5,734.6],[363.2,730.6],[359.0,732.2],[358.6,729.3]]]},{"name":"Camaguey","polys":[[[395.3,498.5],[381.5,552.6],[381.9,556.4],[380.8,556.6],[373.8,581.2],[385.4,587.2],[392.7,571.1],[394.9,559.2],[397.1,558.8],[402.2,546.9],[405.5,533.9],[407.0,533.5],[414.7,503.8]],[[365.2,509.1],[363.0,518.5],[360.6,541.6],[361.9,547.8],[360.1,548.7],[357.7,573.8],[369.2,579.0],[374.4,561.7],[376.0,551.1],[383.0,529.5],[383.2,524.3],[385.9,514.1],[372.7,510.8],[372.5,510.0]]]},{"name":"Centro","polys":[[[399.5,564.1],[380.6,606.3],[387.6,607.9],[392.5,591.8],[411.0,598.4],[417.1,580.6],[420.6,583.9],[413.4,607.2],[409.6,606.3],[403.9,613.8],[401.7,640.0],[397.8,639.8],[399.5,614.7],[390.5,612.9],[379.5,658.0],[390.3,660.4],[390.5,663.7],[379.5,662.9],[363.0,728.0],[390.3,732.4],[406.1,638.2],[416.5,639.3],[430.8,576.4],[408.1,566.7],[403.9,579.9],[399.3,581.2],[402.8,566.7]]]},{"name":"Cruz del Jubileo","polys":[[[282.0,397.5],[298.5,420.6],[367.4,484.4],[444.4,509.1],[473.7,431.9],[452.3,425.0],[442.9,456.9],[438.9,457.6],[430.1,487.7],[426.4,488.8],[445.5,428.6],[427.5,421.5],[420.6,447.5],[285.8,395.8]]]},{"name":"El Carmen","polys":[[[426.8,605.7],[419.5,642.0],[409.6,641.1],[400.2,694.1],[405.7,695.4],[407.2,684.0],[410.5,683.8],[410.5,691.9],[445.7,695.9],[446.6,698.5],[462.4,701.8],[466.4,682.2],[446.8,679.4],[446.6,674.3],[469.0,676.9],[473.0,651.6],[455.8,649.4],[455.2,655.2],[451.4,655.4],[451.7,648.8],[434.5,645.5],[429.9,647.9],[428.6,641.5],[443.7,640.2],[446.8,644.2],[472.3,646.6],[476.1,621.5]]]},{"name":"El Libertador","polys":[[[316.1,762.7],[296.8,756.4],[291.7,776.2],[286.0,776.2],[279.8,794.2],[287.1,796.4],[287.1,803.7],[285.1,807.4],[286.9,819.1],[283.6,819.3],[281.8,817.1],[280.5,820.6],[275.0,822.6],[279.0,827.2],[279.0,830.5],[269.5,834.2],[270.2,836.2],[282.9,832.7],[287.1,833.4],[295.2,820.8],[294.6,816.4],[300.7,808.1]],[[323.0,763.0],[316.8,777.3],[316.6,781.2],[315.5,781.7],[312.4,790.9],[311.3,792.4],[310.9,796.0],[309.8,796.2],[306.7,803.7],[315.3,806.5],[316.1,806.3],[323.6,784.3],[323.6,781.0],[324.5,780.8],[330.2,765.6],[329.8,764.9]]]},{"name":"El Mohan","polys":[[[343.2,679.1],[327.1,675.6],[326.9,672.1],[329.8,667.9],[328.5,664.4],[289.3,671.2],[287.3,678.9],[277.9,699.4],[288.2,703.3],[302.3,704.9],[317.0,695.9],[320.1,695.9],[318.8,703.3],[316.1,704.7],[314.2,709.5],[307.3,711.3],[317.2,717.4],[324.1,715.9],[331.1,719.6],[337.3,703.3]],[[369.4,686.6],[358.2,684.2],[357.3,682.7],[347.8,679.8],[336.8,724.0],[325.6,755.0],[325.2,760.3],[331.3,761.9],[343.9,723.1],[348.0,723.1],[348.7,724.5],[359.7,727.3]]]},{"name":"Gerlein","polys":[[[501.8,506.0],[499.8,512.8],[501.4,514.1],[489.9,582.3],[490.2,584.3],[493.9,585.2],[502.7,571.1],[502.0,567.2],[504.7,551.5],[508.0,551.8],[506.2,568.7],[517.4,570.9],[523.4,536.8],[522.9,526.5],[524.9,516.1],[517.7,515.5],[517.2,513.5],[511.3,512.6],[508.6,508.6]]]},{"name":"La Candelaria","polys":[[[500.3,358.4],[492.4,354.6],[478.9,367.0],[466.0,375.3],[458.7,395.8],[458.5,401.1],[456.7,401.7],[450.1,421.5],[474.5,429.7],[481.4,410.1],[481.4,406.6],[483.6,406.1],[484.4,401.3],[499.4,365.6]],[[499.8,375.8],[490.4,400.2],[490.4,403.7],[488.6,404.8],[479.6,428.6],[485.1,431.0],[489.1,431.0],[495.0,433.4],[496.8,431.0],[499.6,409.2],[498.7,407.7],[495.0,407.0],[495.0,403.3],[496.5,402.6],[500.7,390.5],[500.5,386.1],[501.6,385.0],[502.3,376.9]]]},{"name":"La Candelaria 2","polys":[[[531.1,329.8],[520.5,348.9],[521.6,352.2],[572.7,390.9],[600.6,387.6],[642.0,418.0],[647.2,385.7],[583.2,355.7],[578.6,356.0],[571.8,350.2]]]},{"name":"La Esperanza","polys":[[[491.0,351.1],[474.1,343.4],[458.7,345.8],[458.7,341.4],[468.8,340.8],[455.2,334.6],[456.1,359.0],[452.8,359.3],[450.8,335.1],[425.5,335.9],[426.4,354.2],[448.8,352.9],[449.0,356.2],[422.6,358.8],[421.5,336.4],[397.5,338.1],[398.0,344.5],[419.3,344.1],[418.7,347.8],[400.6,347.8],[401.1,355.3],[419.1,354.2],[419.5,357.9],[398.4,359.3],[398.9,365.6],[448.8,363.9],[456.1,360.4],[456.3,363.7],[474.3,363.0],[475.2,366.3]]]},{"name":"La Florida","polys":[[[462.7,708.6],[421.1,695.2],[409.4,698.1],[388.5,828.1],[397.5,830.5],[408.5,816.6],[402.8,814.2],[402.6,810.9],[412.1,813.6],[414.9,810.9],[414.5,807.4],[424.2,795.7],[421.1,790.5],[427.9,792.0],[455.4,753.9],[434.7,747.6],[433.6,743.8],[456.9,748.2],[460.2,740.3]],[[480.5,708.6],[471.2,706.4],[461.8,758.1],[410.5,824.8],[421.7,832.0],[468.2,764.7],[473.9,752.0]]]},{"name":"Las Petronitas","polys":[[[277.2,595.8],[267.5,593.6],[265.1,599.9],[261.8,599.7],[262.5,594.4],[249.7,592.7],[249.5,594.7],[223.7,594.0],[223.1,597.5],[220.0,597.5],[219.8,594.4],[200.9,595.5],[200.6,593.8],[173.8,597.3],[171.8,639.1],[202.8,638.9],[203.9,632.3],[207.0,632.3],[207.7,636.0],[228.6,635.8],[229.5,631.0],[249.9,629.6],[250.4,627.9],[265.1,629.6],[267.7,615.1],[270.6,614.2]]]},{"name":"Los Almendros","polys":[[[600.2,253.9],[607.0,259.2],[634.9,266.2],[656.9,263.3],[677.2,264.0],[694.8,261.1],[705.5,244.2],[733.3,212.3],[707.1,216.9],[680.7,216.3],[665.5,214.1],[643.5,205.0]]]},{"name":"Las Mercedes","polys":[[[477.4,433.4],[467.1,466.0],[464.6,466.4],[449.5,505.1],[444.4,524.9],[441.1,527.6],[435.4,543.4],[484.9,561.7],[494.6,477.4],[490.6,476.7],[487.1,491.3],[484.0,491.3],[486.4,471.0],[496.3,472.8],[495.7,436.3]]]},{"name":"Los Carruajes","polys":[[[831.2,734.1],[815.5,697.4],[711.0,697.0],[644.8,771.3],[620.8,794.6],[615.8,793.8],[612.5,798.2],[639.8,810.5],[666.4,812.7],[776.8,803.9],[794.6,799.0],[803.4,790.0]]]},{"name":"Manga 3 de mayo","polys":[[[409.6,826.8],[408.1,831.4],[408.5,832.3],[427.2,841.9],[427.2,845.0],[425.0,848.1],[433.2,851.0],[435.6,853.2],[448.8,856.9],[449.5,856.0],[453.0,856.0],[459.6,858.9],[437.4,846.6],[421.5,832.9],[410.7,826.3]],[[474.5,868.6],[475.9,868.8],[476.1,869.9],[479.8,872.5],[479.8,875.6],[478.9,876.0],[479.8,876.0],[495.9,889.2],[515.9,896.9],[515.5,895.4],[507.5,892.8],[495.7,887.0],[495.2,883.5],[497.2,883.1],[497.6,880.9],[482.9,872.3],[481.6,872.3],[481.4,870.8],[478.5,869.7],[478.1,868.8]]]},{"name":"Manga del Pital","polys":[[[473.2,700.3],[472.3,705.5],[505.8,714.6],[547.8,732.6],[586.5,782.5],[596.6,791.8],[610.9,829.0],[621.1,841.7],[601.3,796.2],[550.7,731.7],[512.4,711.9]],[[422.4,839.5],[427.2,841.9],[427.2,845.0],[425.0,848.3],[433.0,851.0],[433.8,852.3],[435.8,853.4],[450.3,857.6],[450.6,856.7],[454.1,856.7],[459.8,859.1],[458.9,858.0],[449.0,853.4],[436.9,846.1],[425.0,835.8],[425.5,839.3]]]},{"name":"Paraiso","polys":[[[281.8,595.3],[268.2,631.2],[290.6,638.2],[295.2,621.1],[298.8,621.1],[294.8,639.5],[299.0,641.5],[299.0,644.6],[290.4,643.7],[290.0,665.5],[326.9,660.7],[326.5,654.3],[301.8,646.8],[302.1,643.5],[307.6,643.5],[332.0,651.6],[331.5,662.2],[337.7,661.8],[337.9,665.1],[331.5,672.5],[344.1,676.3],[347.6,664.0],[345.0,663.5],[344.5,658.0],[335.3,655.6],[346.7,603.7]]]},{"name":"Pueblito Nuevo","polys":[[[204.8,247.7],[214.9,267.5],[226.4,302.9],[248.4,332.9],[252.3,347.6],[248.2,348.9],[263.1,368.5],[268.8,368.5],[279.0,390.5],[280.9,390.7],[271.7,366.1],[261.8,352.9],[251.2,332.6],[234.5,311.5],[206.6,247.1]],[[293.0,423.9],[302.5,433.4],[333.3,457.4],[352.0,477.4],[348.0,497.6],[362.3,499.0],[364.3,487.3],[359.9,484.0],[358.8,480.3],[335.1,456.5],[295.5,423.9]]]},{"name":"Salon Azul","polys":[[[363.2,824.6],[361.9,829.8],[360.6,830.7],[360.6,834.9],[358.4,842.2],[358.4,847.2],[357.3,847.4],[356.6,851.0],[365.4,854.5],[368.9,854.5],[369.6,855.8],[373.8,856.9],[374.0,858.0],[374.9,858.0],[374.9,856.9],[376.2,856.5],[380.4,849.9],[381.0,845.9],[384.3,845.7],[384.8,847.2],[389.6,842.4],[394.2,833.6],[387.9,832.3],[386.8,837.1],[383.5,837.3],[383.9,830.9]],[[340.8,817.3],[338.1,826.1],[338.1,828.5],[337.3,831.4],[331.8,843.3],[347.4,849.6],[348.0,848.3],[348.0,845.9],[350.5,839.5],[350.5,837.8],[352.0,834.5],[352.2,831.6],[353.3,830.9],[355.5,822.4]]]},{"name":"San Antonio","polys":[[[367.4,581.9],[355.1,576.6],[351.3,583.9],[312.8,587.0],[312.6,594.4],[325.6,595.3],[325.8,596.9],[347.4,600.8],[348.0,592.0],[351.3,591.8],[351.3,601.9],[360.6,604.8],[363.7,593.1],[367.4,584.5]]]},{"name":"San Francisco","polys":[[[474.1,367.4],[427.5,368.9],[427.7,374.2],[441.1,373.6],[441.3,376.9],[427.7,378.0],[427.2,386.3],[423.9,386.1],[423.1,369.2],[400.2,370.5],[404.1,392.9],[437.6,390.9],[437.4,395.1],[428.8,395.6],[428.8,407.4],[422.6,404.4],[424.8,395.8],[405.2,397.1],[405.9,409.4],[416.9,410.3],[417.1,413.2],[421.3,414.9],[425.7,413.4],[425.9,416.2],[433.2,418.0],[433.8,420.9],[446.8,424.8],[454.7,401.7],[452.8,397.5],[455.8,396.0],[462.7,372.7]]]},{"name":"San Luis","polys":[[[383.5,735.5],[375.1,775.9],[376.9,776.8],[376.9,779.9],[374.4,780.6],[365.0,820.6],[375.5,823.5],[379.5,797.1],[382.8,796.8],[379.1,825.2],[384.6,826.8],[397.8,738.3],[392.9,737.2],[392.5,739.0],[389.4,739.0],[389.2,736.6]]]},{"name":"San Martin","polys":[[[304.5,811.1],[291.5,835.6],[299.0,838.6],[299.2,841.9],[286.0,871.6],[306.2,881.3],[319.4,885.1],[341.9,883.1],[348.9,852.9],[326.5,846.3],[335.7,816.0],[326.0,812.5],[321.9,829.4],[318.3,830.1],[321.6,811.4],[314.4,809.8]]]},{"name":"San Roque","polys":[[[350.2,604.6],[347.2,614.9],[340.6,653.0],[349.6,654.5],[352.7,638.4],[354.0,636.7],[357.1,636.7],[358.2,643.5],[355.1,651.0],[367.2,654.3],[367.4,649.4],[368.5,649.2],[371.6,634.3],[364.3,633.2],[359.9,631.0],[358.4,634.0],[355.1,633.8],[360.1,606.8]],[[386.1,612.0],[381.5,611.2],[377.1,631.0],[378.2,631.6],[378.2,634.7],[376.6,635.4],[371.1,655.4],[373.3,656.3],[373.3,659.3],[366.1,660.0],[365.9,658.7],[360.8,658.0],[360.6,656.9],[353.8,656.3],[348.9,677.6],[370.3,683.3],[375.3,660.9],[373.6,660.0],[373.6,656.9],[376.9,656.3],[380.8,632.7]]]},{"name":"Manga de Rubio","polys":[[[403.5,411.6],[403.3,415.1],[399.5,414.9],[401.1,429.4],[401.9,430.8],[401.9,432.3],[403.7,439.6],[403.9,439.1],[407.0,439.1],[407.9,434.1],[409.0,432.1],[405.5,432.1],[403.9,419.1],[403.7,412.5],[405.9,412.3]]]},{"name":"12 de septiembre","polys":[[[471.0,225.9],[459.4,221.3],[447.7,228.1],[446.4,232.1],[458.7,222.2],[469.9,225.5],[464.2,239.8],[456.7,237.4],[453.2,233.4],[445.9,235.6],[445.7,232.5],[439.1,237.4],[425.0,238.0],[425.7,240.0],[431.9,240.0],[431.9,243.5],[438.0,240.9],[438.2,244.2],[418.0,272.6],[407.4,276.8],[409.0,281.8],[405.0,281.8],[403.3,287.3],[423.5,304.3],[421.7,315.5],[436.7,318.8],[422.4,315.5],[425.9,295.7],[431.2,290.4],[442.9,268.2],[451.9,258.1],[455.4,257.6],[456.3,252.3],[459.1,252.3],[458.9,247.7],[466.8,237.6]]]}]};
+
+const FALLBACK_LIDERES = [{"nombre":"raul rolong","genero":"masculino","fecha de nacimiento":"15-05-1987","nivel educativo":"bachiller","zona":"urbano"}];
+const FALLBACK_VOTANTES = [{"nombre":"yurena celin","genero":"femenino","fecha de nacimiento":"07-08-1995","nivel educativo":"profesional","categoria (estado)":"voluntario","zona":"urbano","nivel de compromiso":"comprometido","canal de contacto":"presencial"}];
+
+const PALETTE = {gold:"#E3A72E",teal:"#4FA98A",rust:"#C4633A",blue:"#5B8DBD",muted:"#8C99A8",paper:"#EDEFF2",line:"rgba(237,239,242,0.12)"};
+
+function normalize(s){
+  if(s===null||s===undefined) return "";
+  return s.toString().normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim().replace(/\s+/g," ");
+}
+function parseNum(v){
+  if(v===null||v===undefined||v==="") return 0;
+  let s = v.toString().trim().replace(/^"|"$/g,"");
+  let pct = false;
+  if(s.endsWith("%")){ pct = true; s = s.slice(0,-1).trim(); }
+  if(/^-?\d+,\d+$/.test(s)){ s = s.replace(",", "."); }
+  else { s = s.replace(/[,$]/g,""); }
+  let n = parseFloat(s);
+  if(isNaN(n)) return 0;
+  return pct ? n/100 : n;
+}
+function fmtPct(x){ return (x*100).toFixed(1).replace(/\.0$/,"") + "%"; }
+function getField(item, substr){
+  const key = Object.keys(item).find(k=>k.includes(substr));
+  return key ? item[key] : undefined;
+}
+function isFilled(v){ return v!==undefined && v!==null && v.toString().trim()!==""; }
+function countNonEmpty(list, field){ return list.filter(x=>isFilled(x[field])).length; }
+function sumField(list, field){ return list.reduce((s,x)=>s+parseNum(x[field]),0); }
+function countBy(list, field){
+  const counts = {};
+  list.forEach(item=>{
+    const raw = item[field];
+    if(!isFilled(raw)) return;
+    const val = raw.toString().trim();
+    counts[val] = (counts[val]||0) + 1;
+  });
+  return counts;
+}
+function countByFlexible(list, substr){
+  const counts = {};
+  list.forEach(item=>{
+    const raw = getField(item, substr);
+    if(!isFilled(raw)) return;
+    const val = raw.toString().trim();
+    counts[val] = (counts[val]||0) + 1;
+  });
+  return counts;
+}
+
+const MESES_ES = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};
+function parseFlexDate(s){
+  if(!s) return null;
+  s = s.toString().trim();
+  const mText = s.match(/^(\d{1,2})[\/\-]([a-zA-Záéíóúñ]+)[\/\-](\d{2,4})$/i);
+  if(mText){
+    const day = parseInt(mText[1],10);
+    const month = MESES_ES[normalize(mText[2])];
+    let y = parseInt(mText[3],10);
+    if(y < 100) y += 2000;
+    if(!month) return null;
+    const d = new Date(y, month-1, day);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if(!m) return null;
+  let [_, a, b, y] = m;
+  a = parseInt(a,10); b = parseInt(b,10); y = parseInt(y,10);
+  if(y < 100) y += 2000;
+  let day = a, month = b;
+  if(month > 12 && day <= 12){ [day, month] = [month, day]; }
+  const d = new Date(y, month-1, day);
+  return isNaN(d.getTime()) ? null : d;
+}
+function calcAge(birthDateStr){
+  const d = parseFlexDate(birthDateStr);
+  if(!d) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const beforeBirthday = (now.getMonth() < d.getMonth()) || (now.getMonth()===d.getMonth() && now.getDate() < d.getDate());
+  if(beforeBirthday) age--;
+  return age >= 0 && age < 120 ? age : null;
+}
+function ageBucket(age){
+  if(age===null) return null;
+  if(age <= 25) return "18-25";
+  if(age <= 35) return "26-35";
+  if(age <= 50) return "36-50";
+  if(age <= 65) return "51-65";
+  return "66+";
+}
+
+function bustCache(url){
+  const sep = url.includes("?") ? "&" : "?";
+  return url + sep + "_cb=" + Date.now();
+}
+async function fetchCsvDicts(url){
+  if(typeof Papa === "undefined") throw new Error("PapaParse no disponible");
+  const res = await fetch(bustCache(url), {cache:"no-store"});
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  const text = await res.text();
+  // header:false + mapeo manual por posición: si una columna (ej. listas
+  // auxiliares de validación de datos) se repite con el mismo nombre más
+  // a la derecha, siempre nos quedamos con la PRIMERA ocurrencia (la real).
+  const rows = Papa.parse(text.trim(), {header:false, skipEmptyLines:true}).data;
+  if(rows.length === 0) return [];
+  const headerRow = rows[0];
+  const colForName = {};
+  headerRow.forEach((h, i)=>{
+    const key = normalize(h);
+    if(key && !(key in colForName)) colForName[key] = i;
+  });
+  return rows.slice(1).map(r=>{
+    const clean = {};
+    Object.keys(colForName).forEach(key=>{ clean[key] = r[colForName[key]]; });
+    return clean;
+  });
+}
+
+async function loadAllData(){
+  const cfg = getSaved();
+  const out = {
+    barrios:FALLBACK_BARRIOS, visitas:FALLBACK_VISITAS, lideres:FALLBACK_LIDERES, votantes:FALLBACK_VOTANTES,
+    live:false, anyError:false
+  };
+  const keys = ["barrios","visitas","lideres","votantes"];
+  let liveCount = 0;
+  await Promise.all(keys.map(async k=>{
+    if(!cfg[k]) return;
+    try{
+      out[k] = await fetchCsvDicts(cfg[k]);
+      liveCount++;
+    }catch(e){
+      console.warn(k + " en vivo falló, usando datos locales:", e);
+      out.anyError = true;
+    }
+  }));
+  out.live = liveCount === keys.length;
+  return out;
+}
+
+function build(barrios, visitas, lideres, votantes){
+  const m = {};
+
+  // --- Cobertura territorial (directo de barrios) ---
+  m.totalBarrios = countNonEmpty(barrios, "barrio");
+  m.barriosVisitados = countNonEmpty(barrios, "ultima visita");
+  m.pctCobertura = m.totalBarrios ? m.barriosVisitados / m.totalBarrios : 0;
+  m.totalVotantesBarrios = sumField(barrios, "votantes");
+  m.metaVotantes = sumField(barrios, "meta votantes");
+  m.pctCumplimientoMeta = m.metaVotantes ? m.totalVotantesBarrios / m.metaVotantes : 0;
+
+  // --- Estructura por zona (directo de lideres/votantes) ---
+  const lideresPorZona = countBy(lideres, "zona");
+  const votantesPorZona = countBy(votantes, "zona");
+  const zonasSet = new Set([...Object.keys(lideresPorZona), ...Object.keys(votantesPorZona)]);
+  m.porZona = [...zonasSet].sort().map(z=>({
+    zona:z, lideres:lideresPorZona[z]||0, votantes:votantesPorZona[z]||0
+  }));
+
+  // --- Crecimiento de líderes por año (directo de lideres."fecha ingreso") ---
+  const porAnio = {};
+  lideres.forEach(l=>{
+    const d = parseFlexDate(l["fecha ingreso"]);
+    if(d) porAnio[d.getFullYear()] = (porAnio[d.getFullYear()]||0) + 1;
+  });
+  m.anios = Object.keys(porAnio).sort();
+  let acc = 0;
+  m.acumulado = m.anios.map(a=>{ acc += porAnio[a]; return acc; });
+
+  // --- Base electoral (directo de votantes) ---
+  m.votantesRegistrados = votantes.filter(v=>isFilled(v["nombre"]) || isFilled(v["id persona"]) || isFilled(v["nivel de compromiso"])).length;
+  const comprometidos = votantes.filter(v=>normalize(v["nivel de compromiso"])==="comprometido").length;
+  m.tasaConversion = m.votantesRegistrados ? comprometidos / m.votantesRegistrados : 0;
+  m.compromiso = Object.entries(countBy(votantes,"nivel de compromiso")).map(([label,votantes])=>({label,votantes}));
+  m.canal = Object.entries(countBy(votantes,"canal de contacto")).map(([label,votantes])=>({label,votantes}));
+
+  // --- Actividad en terreno (directo de visitas) ---
+  m.actividadesRealizadas = visitas.filter(v=>isFilled(v["actividad"]) || isFilled(v["fecha"]) || isFilled(v["necesidad prioritaria"]) || isFilled(v["personas atentidas"])).length;
+  m.personasAtendidas = sumField(visitas, "personas atentidas");
+  m.promedioPersonas = m.actividadesRealizadas ? m.personasAtendidas / m.actividadesRealizadas : 0;
+  m.necesidades = Object.entries(countBy(visitas,"necesidad prioritaria"))
+    .map(([label,menciones])=>({label,menciones})).sort((a,b)=>b.menciones-a.menciones);
+
+  return m;
+}
+
+function renderKpis(m, votantes){
+  const strip = document.getElementById("kpiStrip");
+  const conCategoria = (votantes||[]).filter(v=>isFilled(getField(v,"categoria"))).length;
+  const kpis = [
+    {label:"Cobertura de barrios", num:fmtPct(m.pctCobertura), bar:m.pctCobertura},
+    {label:"Cumplimiento de meta", num:fmtPct(m.pctCumplimientoMeta), bar:m.pctCumplimientoMeta},
+    {label:"Sublíderes + voluntarios", num:conCategoria, bar:null},
+    {label:"Tasa de conversión", num:fmtPct(m.tasaConversion), bar:m.tasaConversion},
+    {label:"Total votantes", num:m.totalVotantesBarrios, bar:null},
+  ];
+  strip.innerHTML = kpis.map(k=>`
+    <div class="kpi">
+      <div class="num">${k.num}</div>
+      <div class="label">${k.label}</div>
+      ${k.bar!==null ? `<div class="bar"><i style="width:${Math.min(k.bar*100,100)}%"></i></div>` : `<div class="bar" style="opacity:0"></div>`}
+    </div>`).join("");
+
+  document.getElementById("chipRow").innerHTML = `
+    <span class="chip"><b>${m.barriosVisitados}</b> / ${m.totalBarrios} barrios visitados</span>
+  `;
+}
+
+let charts = {};
+function killChart(id){ if(charts[id]){ try{charts[id].destroy();}catch(e){} } }
+function chartUnavailable(canvasId, msg){
+  const c = document.getElementById(canvasId);
+  if(c) c.outerHTML = `<div class="chart-error">${msg}</div>`;
+}
+
+function renderCharts(m){
+  if(typeof Chart === "undefined"){
+    ["chartCobertura","chartZona","chartCrecimiento","chartMeta","chartCompromiso","chartCanal","chartNecesidades"].forEach(id=>
+      chartUnavailable(id, "No se pudo cargar la librería de gráficos (revisa tu conexión o un bloqueador de anuncios) — recarga la página."));
+    return;
+  }
+  Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+  Chart.defaults.color = PALETTE.muted;
+  Chart.defaults.borderColor = PALETTE.line;
+
+  const safe = (id, fn) => { try{ fn(); }catch(e){ console.error(e); chartUnavailable(id,"No se pudo dibujar esta gráfica."); } };
+
+  safe("chartCobertura", ()=>{
+    killChart("cobertura");
+    charts.cobertura = new Chart(document.getElementById("chartCobertura"), {
+      type:"doughnut",
+      data:{labels:["Visitados","Pendientes"], datasets:[{data:[m.barriosVisitados, Math.max(m.totalBarrios-m.barriosVisitados,0)],
+        backgroundColor:[PALETTE.gold, "rgba(237,239,242,0.12)"], borderColor:"#16202B", borderWidth:2}]},
+      options:{responsive:true, plugins:{legend:{position:"bottom",labels:{boxWidth:10,padding:10,font:{size:11}}}}}
+    });
+  });
+
+  safe("chartZona", ()=>{
+    killChart("zona");
+    charts.zona = new Chart(document.getElementById("chartZona"), {
+      type:"bar",
+      data:{labels:m.porZona.map(z=>z.zona), datasets:[
+        {label:"Líderes", data:m.porZona.map(z=>z.lideres), backgroundColor:PALETTE.gold, borderRadius:4},
+        {label:"Votantes", data:m.porZona.map(z=>z.votantes), backgroundColor:PALETTE.blue, borderRadius:4},
+      ]},
+      options:{responsive:true, plugins:{legend:{position:"bottom",labels:{boxWidth:10,padding:14,font:{size:11}}}},
+        scales:{x:{grid:{display:false}}, y:{beginAtZero:true, grid:{color:PALETTE.line}, ticks:{precision:0}}}}
+    });
+  });
+
+  safe("chartCrecimiento", ()=>{
+    killChart("crec");
+    charts.crec = new Chart(document.getElementById("chartCrecimiento"), {
+      type:"line",
+      data:{labels:m.anios, datasets:[{label:"Líderes acumulados", data:m.acumulado, borderColor:PALETTE.gold,
+        backgroundColor:"rgba(227,167,46,0.15)", fill:true, tension:0.35, pointBackgroundColor:PALETTE.gold, pointRadius:4}]},
+      options:{responsive:true, plugins:{legend:{display:false}},
+        scales:{x:{grid:{display:false}}, y:{beginAtZero:true, grid:{color:PALETTE.line}, ticks:{precision:0}}}}
+    });
+  });
+
+  safe("chartMeta", ()=>{
+    killChart("meta");
+    charts.meta = new Chart(document.getElementById("chartMeta"), {
+      type:"bar",
+      data:{labels:["Votantes actuales","Meta"], datasets:[{data:[m.totalVotantesBarrios, m.metaVotantes],
+        backgroundColor:[PALETTE.blue, "rgba(237,239,242,0.15)"], borderRadius:4}]},
+      options:{responsive:true, plugins:{legend:{display:false}},
+        scales:{x:{grid:{display:false}}, y:{beginAtZero:true, grid:{color:PALETTE.line}, ticks:{precision:0}}}}
+    });
+  });
+
+  safe("chartCompromiso", ()=>{
+    killChart("compromiso");
+    charts.compromiso = new Chart(document.getElementById("chartCompromiso"), {
+      type:"doughnut",
+      data:{labels:m.compromiso.map(c=>c.label), datasets:[{data:m.compromiso.map(c=>c.votantes),
+        backgroundColor:[PALETTE.gold,PALETTE.teal,PALETTE.blue,PALETTE.rust,"#9B7FC9"], borderColor:"#16202B", borderWidth:2}]},
+      options:{responsive:true, plugins:{legend:{position:"bottom",labels:{boxWidth:10,padding:10,font:{size:10.5}}}}}
+    });
+  });
+
+  safe("chartCanal", ()=>{
+    killChart("canal");
+    charts.canal = new Chart(document.getElementById("chartCanal"), {
+      type:"bar",
+      data:{labels:m.canal.map(c=>c.label), datasets:[{data:m.canal.map(c=>c.votantes), backgroundColor:PALETTE.teal, borderRadius:4}]},
+      options:{indexAxis:"y", responsive:true, plugins:{legend:{display:false}},
+        scales:{x:{beginAtZero:true, grid:{color:PALETTE.line}, ticks:{precision:0}}, y:{grid:{display:false}}}}
+    });
+  });
+
+  safe("chartNecesidades", ()=>{
+    killChart("nec");
+    charts.nec = new Chart(document.getElementById("chartNecesidades"), {
+      type:"bar",
+      data:{labels:m.necesidades.map(n=>n.label), datasets:[{data:m.necesidades.map(n=>n.menciones), backgroundColor:PALETTE.gold, borderRadius:4}]},
+      options:{indexAxis:"y", responsive:true, plugins:{legend:{display:false}},
+        scales:{x:{beginAtZero:true, grid:{color:PALETTE.line}, ticks:{precision:0}}, y:{grid:{display:false}, ticks:{font:{size:10.5}}}}}
+    });
+  });
+}
+
+function renderDemographics(lideres, votantes){
+  if(typeof Chart === "undefined"){
+    ["chartLideresGenero","chartLideresEdad","chartLideresNivel","chartVotantesGenero","chartVotantesEdad","chartVotantesNivel","chartVotantesCategoria"].forEach(id=>
+      chartUnavailable(id, "No se pudo cargar la librería de gráficos."));
+    return;
+  }
+  const safe = (id, fn) => { try{ fn(); }catch(e){ console.error(e); chartUnavailable(id,"No se pudo dibujar esta gráfica."); } };
+  const donutColors = [PALETTE.gold,PALETTE.teal,PALETTE.blue,PALETTE.rust,"#9B7FC9","#6B7280"];
+
+  const lideresGenero = countBy(lideres, "genero");
+  const lideresNivel = countBy(lideres, "nivel educativo");
+  const votantesGenero = countBy(votantes, "genero");
+  const votantesNivel = countBy(votantes, "nivel educativo");
+  const votantesCategoria = countByFlexible(votantes, "categoria");
+
+  const AGE_ORDER = ["18-25","26-35","36-50","51-65","66+"];
+  const lideresEdadCounts = {};
+  lideres.forEach(l=>{
+    const bucket = ageBucket(calcAge(l["fecha de nacimiento"]));
+    if(bucket) lideresEdadCounts[bucket] = (lideresEdadCounts[bucket]||0) + 1;
+  });
+  const lideresEdadLabels = AGE_ORDER.filter(b=>lideresEdadCounts[b]);
+
+  const votantesEdadCounts = {};
+  votantes.forEach(v=>{
+    const bucket = ageBucket(calcAge(v["fecha de nacimiento"]));
+    if(bucket) votantesEdadCounts[bucket] = (votantesEdadCounts[bucket]||0) + 1;
+  });
+  const votantesEdadLabels = AGE_ORDER.filter(b=>votantesEdadCounts[b]);
+
+  safe("chartLideresGenero", ()=>{
+    killChart("lidGenero");
+    const labels = Object.keys(lideresGenero);
+    charts.lidGenero = new Chart(document.getElementById("chartLideresGenero"), {
+      type:"doughnut",
+      data:{labels, datasets:[{data:labels.map(k=>lideresGenero[k]), backgroundColor:donutColors, borderColor:"#16202B", borderWidth:2}]},
+      options:{responsive:true, plugins:{legend:{position:"bottom",labels:{boxWidth:10,padding:10,font:{size:11}}}}}
+    });
+  });
+
+  safe("chartLideresEdad", ()=>{
+    killChart("lidEdad");
+    charts.lidEdad = new Chart(document.getElementById("chartLideresEdad"), {
+      type:"bar",
+      data:{labels:lideresEdadLabels, datasets:[{data:lideresEdadLabels.map(b=>lideresEdadCounts[b]), backgroundColor:PALETTE.blue, borderRadius:4}]},
+      options:{responsive:true, plugins:{legend:{display:false}},
+        scales:{x:{grid:{display:false}}, y:{beginAtZero:true, grid:{color:PALETTE.line}, ticks:{precision:0}}}}
+    });
+  });
+
+  safe("chartLideresNivel", ()=>{
+    killChart("lidNivel");
+    const labels = Object.keys(lideresNivel);
+    charts.lidNivel = new Chart(document.getElementById("chartLideresNivel"), {
+      type:"bar",
+      data:{labels, datasets:[{data:labels.map(k=>lideresNivel[k]), backgroundColor:PALETTE.gold, borderRadius:4}]},
+      options:{indexAxis:"y", responsive:true, plugins:{legend:{display:false}},
+        scales:{x:{beginAtZero:true, grid:{color:PALETTE.line}, ticks:{precision:0}}, y:{grid:{display:false}}}}
+    });
+  });
+
+  safe("chartVotantesGenero", ()=>{
+    killChart("votGenero");
+    const labels = Object.keys(votantesGenero);
+    charts.votGenero = new Chart(document.getElementById("chartVotantesGenero"), {
+      type:"doughnut",
+      data:{labels, datasets:[{data:labels.map(k=>votantesGenero[k]), backgroundColor:donutColors, borderColor:"#16202B", borderWidth:2}]},
+      options:{responsive:true, plugins:{legend:{position:"bottom",labels:{boxWidth:10,padding:10,font:{size:11}}}}}
+    });
+  });
+
+  safe("chartVotantesEdad", ()=>{
+    killChart("votEdad");
+    charts.votEdad = new Chart(document.getElementById("chartVotantesEdad"), {
+      type:"bar",
+      data:{labels:votantesEdadLabels, datasets:[{data:votantesEdadLabels.map(b=>votantesEdadCounts[b]), backgroundColor:PALETTE.blue, borderRadius:4}]},
+      options:{responsive:true, plugins:{legend:{display:false}},
+        scales:{x:{grid:{display:false}}, y:{beginAtZero:true, grid:{color:PALETTE.line}, ticks:{precision:0}}}}
+    });
+  });
+
+  safe("chartVotantesNivel", ()=>{
+    killChart("votNivel");
+    const labels = Object.keys(votantesNivel);
+    charts.votNivel = new Chart(document.getElementById("chartVotantesNivel"), {
+      type:"bar",
+      data:{labels, datasets:[{data:labels.map(k=>votantesNivel[k]), backgroundColor:PALETTE.teal, borderRadius:4}]},
+      options:{indexAxis:"y", responsive:true, plugins:{legend:{display:false}},
+        scales:{x:{beginAtZero:true, grid:{color:PALETTE.line}, ticks:{precision:0}}, y:{grid:{display:false}}}}
+    });
+  });
+
+  safe("chartVotantesCategoria", ()=>{
+    killChart("votCategoria");
+    const labels = Object.keys(votantesCategoria);
+    charts.votCategoria = new Chart(document.getElementById("chartVotantesCategoria"), {
+      type:"bar",
+      data:{labels, datasets:[{data:labels.map(k=>votantesCategoria[k]), backgroundColor:PALETTE.gold, borderRadius:4}]},
+      options:{indexAxis:"y", responsive:true, plugins:{legend:{display:false}},
+        scales:{x:{beginAtZero:true, grid:{color:PALETTE.line}, ticks:{precision:0}}, y:{grid:{display:false}}}}
+    });
+  });
+}
+
+function roleForVotante(p){
+  const cat = normalize(getField(p, "categoria"));
+  if(cat.includes("sublider2")) return "Sublíder 2";
+  if(cat.includes("sublider")) return "Sublíder";
+  if(cat.includes("voluntario")) return "Voluntario";
+  return "Votante";
+}
+function renderBirthdays(lideres, votantes){
+  const host = document.getElementById("bdayHost");
+  const today = new Date();
+  const hoy = [];
+  lideres.forEach(p=>{
+    const d = parseFlexDate(p["fecha de nacimiento"]);
+    if(!d) return;
+    if(d.getMonth()===today.getMonth() && d.getDate()===today.getDate()){
+      const nombre = (p.nombre||"").toString().trim();
+      if(!nombre) return;
+      hoy.push({nombre, rol:"Líder", fecha: d.toLocaleDateString("es-CO", {day:"numeric", month:"long"}), edad: calcAge(p["fecha de nacimiento"])});
+    }
+  });
+  votantes.forEach(p=>{
+    const d = parseFlexDate(p["fecha de nacimiento"]);
+    if(!d) return;
+    if(d.getMonth()===today.getMonth() && d.getDate()===today.getDate()){
+      const nombre = (p.nombre||"").toString().trim();
+      if(!nombre) return;
+      hoy.push({nombre, rol:roleForVotante(p), fecha: d.toLocaleDateString("es-CO", {day:"numeric", month:"long"}), edad: calcAge(p["fecha de nacimiento"])});
+    }
+  });
+
+  if(hoy.length === 0){
+    host.innerHTML = `<div class="bday-empty">Nadie cumple años hoy.</div>`;
+    return;
+  }
+  host.innerHTML = `<div class="bday-cards">` + hoy.map(p => `
+    <div class="bday-card">
+      <div class="name">🎉 ${p.nombre}</div>
+      <div class="role">${p.rol}</div>
+      <div class="details">${p.fecha} · ${p.edad} años</div>
+      <div class="msg">Feliz cumpleaños a ti, que nos acompañas en este camino del cambio 🎂</div>
+    </div>
+  `).join("") + `</div>`;
+}
+
+const MAP_NAME_ALIASES = {
+  "cruz del jubileo": "cruz de jubileo",
+  "la candelaria": "la candelaria 1",
+  "manga del pital": "manga de pital"
+};
+function polygonArea(pts){
+  let a = 0;
+  for(let i=0;i<pts.length;i++){
+    const [x1,y1] = pts[i], [x2,y2] = pts[(i+1)%pts.length];
+    a += x1*y2 - x2*y1;
+  }
+  return Math.abs(a/2);
+}
+function polygonCentroid(pts){
+  let cx=0, cy=0;
+  pts.forEach(([x,y])=>{ cx+=x; cy+=y; });
+  return [cx/pts.length, cy/pts.length];
+}
+function renderRealMap(barrios){
+  const host = document.getElementById("realMapHost");
+  // mapa normalizado nombre -> datos del barrio real (para saber si fue visitado)
+  const byName = {};
+  barrios.forEach(b=>{
+    const key = normalize(b.barrio);
+    byName[key] = b;
+  });
+  let visitadosPlano = 0;
+  const svgParts = [`<svg viewBox="0 0 ${REAL_MAP_DATA.w} ${REAL_MAP_DATA.h}" style="width:100%;height:auto;display:block;">`];
+  const labelParts = [];
+  REAL_MAP_DATA.barrios.forEach(poly=>{
+    let key = normalize(poly.name);
+    key = MAP_NAME_ALIASES[key] || key;
+    const b = byName[key];
+    const visitado = b ? isFilled(b["ultima visita"]) : false;
+    if(visitado) visitadosPlano++;
+    const fill = b ? (visitado ? PALETTE.gold : "#2A3846") : "#0E1620";
+    const textColor = visitado ? "#1a1305" : "#C7D0D8";
+    const lider = b ? (b.lider||"").toString().trim() : "";
+    const tooltip = `${poly.name}${b ? (visitado ? " — visitado" : " — pendiente") : " — sin datos"}${lider && !/sin lider/.test(normalize(lider)) ? " · líder: "+lider : ""}`;
+    let biggest = null, biggestArea = -1;
+    poly.polys.forEach(pts=>{
+      const ptsStr = pts.map(p=>p.join(",")).join(" ");
+      svgParts.push(`<polygon points="${ptsStr}" fill="${fill}" stroke="#4A5A6A" stroke-width="1.2"><title>${tooltip}</title></polygon>`);
+      const area = polygonArea(pts);
+      if(area > biggestArea){ biggestArea = area; biggest = pts; }
+    });
+    if(biggest && biggestArea > 250){
+      const [cx,cy] = polygonCentroid(biggest);
+      labelParts.push(`<text x="${cx.toFixed(1)}" y="${cy.toFixed(1)}" font-size="7" font-family="Inter,sans-serif" fill="${textColor}" text-anchor="middle" dominant-baseline="middle" pointer-events="none" style="text-shadow:0 0 2px rgba(0,0,0,0.5);">${poly.name}</text>`);
+    }
+  });
+  svgParts.push(...labelParts);
+  svgParts.push("</svg>");
+  host.innerHTML = svgParts.join("");
+  const totalPlano = REAL_MAP_DATA.barrios.length;
+  document.getElementById("realMapHint").textContent = `${visitadosPlano} visitados · ${totalPlano-visitadosPlano} pendientes (de ${totalPlano} barrios en el plano)`;
+}
+
+function renderMosaic(barrios){
+  const enriched = barrios.map(b=>({
+    nombre:(b.barrio||"").toString().trim(),
+    zona:(b.zona||"sin zona").toString().trim().toLowerCase(),
+    lider:(b.lider||"").toString().trim(),
+    visitado: isFilled(b["ultima visita"])
+  }));
+  const total = enriched.length;
+  const visitados = enriched.filter(b=>b.visitado).length;
+  document.getElementById("coberturaHint").textContent = `${visitados} visitados · ${total-visitados} pendientes`;
+
+  const zonas = {};
+  enriched.forEach(b=>{ zonas[b.zona] = zonas[b.zona]||[]; zonas[b.zona].push(b); });
+
+  document.getElementById("mosaicHost").innerHTML = Object.keys(zonas).sort().map(z=>{
+    const list = zonas[z];
+    const vis = list.filter(b=>b.visitado).length;
+    return `
+      <div class="zona-block">
+        <div class="zona-title"><b>${z}</b> · ${list.length} barrios · ${vis} visitados</div>
+        <div class="mosaic">
+          ${list.map(b=>`
+            <div class="tile ${b.visitado?'visitado':'pendiente'}" title="${b.nombre}">
+              <span class="name">${b.nombre||'—'}</span>
+              <span class="stat">${b.lider && !/sin lider/.test(normalize(b.lider)) ? b.lider : 'sin líder'}</span>
+            </div>`).join("")}
+        </div>
+      </div>`;
+  }).join("");
+}
+
+/* ============================================================
+   Carga de librerías con varias fuentes de respaldo: si cdnjs
+   está bloqueado (antivirus, firewall, adblock), prueba jsDelivr
+   y luego unpkg antes de rendirse.
+   ============================================================ */
+function loadScriptFallback(urls){
+  return new Promise((resolve, reject)=>{
+    let i = 0;
+    function tryNext(){
+      if(i >= urls.length){ reject(new Error("todas las fuentes fallaron")); return; }
+      const s = document.createElement("script");
+      s.src = urls[i++];
+      s.onload = () => resolve();
+      s.onerror = () => tryNext();
+      document.head.appendChild(s);
+    }
+    tryNext();
+  });
+}
+const librariesReady = loadScriptFallback([
+  "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js",
+  "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js",
+  "https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js"
+]).catch(()=>null);
+
+async function refreshAll(){
+  const modePill = document.getElementById("modePill");
+  modePill.textContent = "actualizando…";
+  try{
+    await librariesReady;
+    const data = await loadAllData();
+    const m = build(data.barrios, data.visitas, data.lideres, data.votantes);
+    renderKpis(m, data.votantes);
+    renderCharts(m);
+    renderRealMap(data.barrios);
+    renderMosaic(data.barrios);
+    renderDemographics(data.lideres, data.votantes);
+    renderBirthdays(data.lideres, data.votantes);
+
+    if(data.live){ modePill.textContent = "● modo en vivo (Google Sheets)"; modePill.className = "pill live"; }
+    else{
+      modePill.textContent = data.anyError ? "⚠ no se pudo leer alguna hoja en vivo — completando con datos locales" : "modo local (datos de ejemplo)";
+      modePill.className = "pill " + (data.anyError ? "warn" : "local");
+    }
+    document.getElementById("updatedPill").textContent = "actualizado " + new Date().toLocaleString("es-CO", {dateStyle:"medium", timeStyle:"short"});
+  }catch(e){
+    console.error("Error general al actualizar:", e);
+    modePill.textContent = "⚠ ocurrió un error — revisa la consola (F12)";
+    modePill.className = "pill warn";
+  }
+}
+
+refreshAll();
+setInterval(refreshAll, 3 * 60 * 1000); // se refresca solo cada 3 minutos
+</script>
+</body>
+</html>
